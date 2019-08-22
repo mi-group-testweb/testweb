@@ -41,5 +41,6 @@
   }
   .ctent2{
     height: 100%;
-    flex-grow: 3;
+    flex-grow: 5;
+    flex-shrink: 0;
   }
