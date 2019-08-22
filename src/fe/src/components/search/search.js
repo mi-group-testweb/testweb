@@ -1,8 +1,8 @@
 import React from 'react';
 import './search.css';
 import { SearchBar } from 'antd-mobile';
-import {ButtonGroup,Button,DropdownButton} from 'react-bootstrap/ButtonGroup'
-var Dropdown = require("react-bootstrap-dropdown");
+// import {ButtonGroup,Button,DropdownButton} from 'react-bootstrap/ButtonGroup'
+// var Dropdown = require("react-bootstrap-dropdown");
 class SearchBarExample extends React.Component {
     state = {
 
@@ -15,7 +15,7 @@ class SearchBarExample extends React.Component {
 
     render() {
         return (<div>
-            <ButtonGroup vertical>
+            {/* <ButtonGroup vertical>
                 <Button>Button</Button>
                 <Button>Button</Button>
                 <DropdownButton as={ButtonGroup} title="Dropdown" id="bg-vertical-dropdown-1">
@@ -32,7 +32,7 @@ class SearchBarExample extends React.Component {
                     <Dropdown.Item eventKey="1">Dropdown link</Dropdown.Item>
                     <Dropdown.Item eventKey="2">Dropdown link</Dropdown.Item>
                 </DropdownButton>
-            </ButtonGroup>
+            </ButtonGroup> */}
             <SearchBar
                 value={this.state.value}
                 placeholder="Search"
