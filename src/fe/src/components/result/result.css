@@ -2,3 +2,15 @@
 {
    margin: 30px;  
 }
+p{
+    text-align: right;
+}
+thead{
+    font-size: 15px;
+    font-weight: bold;
+}
+.left{
+
+    text-align: left;
+    color:CornflowerBlue;
+}
