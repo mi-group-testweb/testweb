@@ -3,3 +3,26 @@
     font-size: 14px;
     padding: 30px 0 18px 0;
   }
+.dropbtn{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 30px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+.search{
+  width: 350px;
+  display: inline-block;
+}
+.heig-30{
+  height: 40px;
+}
+.sear-c{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search1,.select{
+  margin-right: 15px;
+}
