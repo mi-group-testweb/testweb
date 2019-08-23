@@ -16,6 +16,19 @@ thead{
     margin-bottom: 30px;
 }
 .resuleName{
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 500;
+}
+.echart_c{
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.table_c{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
 }
