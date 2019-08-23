@@ -13,10 +13,9 @@ class Result extends React.Component {
 
             <div className="tab">
                 <div className="left">
-                    <h3>监测结果</h3>
+                    <span className="resuleName">监测结果</span>
+                    <span>  {new Date().toLocaleTimeString()}</span>
                 </div>
-
-                <p>  {new Date().toLocaleTimeString()}</p>
                
     
     

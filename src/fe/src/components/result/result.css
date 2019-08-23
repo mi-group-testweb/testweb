@@ -1,6 +1,6 @@
 .tab
 {
-   margin: 30px;  
+   margin: 0  30px;  
 }
 p{
     text-align: right;
@@ -10,7 +10,12 @@ thead{
     font-weight: bold;
 }
 .left{
-
-    text-align: left;
-    color:CornflowerBlue;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+.resuleName{
+    font-size: 18px;
+    font-weight: 500;
 }
