@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+var TestIP string
+
 type TaskId struct {
 	Id               int    `json:"id"`
 	MissionId        int    `json:"mission_id"`
@@ -39,13 +41,14 @@ type TestURL struct {
 }
 
 func main() {
-	http.HandleFunc("/v2/mission_instance", Save_Mission)
+	http.HandleFunc("/url", GetUrl)
+	http.HandleFunc("/v2/assignments", SendMission)
 	//http.HandleFunc("/v2/assignments", Send_Mission)
 	fmt.Println("Listening...")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8000", nil))
 }
 
-func Save_Mission (w http.ResponseWriter, r *http.Request) {
+func GetUrl(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -56,7 +59,19 @@ func Save_Mission (w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	_, _ = fmt.Fprintln(w, "Unmarshal successefully!")
+	TestIP = NeedIP.IP
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(NeedIP); err != nil {
+		panic(err)
+	}
+}
+
+func SendMission(w http.ResponseWriter, r *http.Request) {
+	_, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
 	task := Task{
 		TaskId: TaskId{
 			Id:               0,
@@ -67,7 +82,7 @@ func Save_Mission (w http.ResponseWriter, r *http.Request) {
 		Type: "PING",
 	}
 	var bullet PINGBullet
-	bullet.Host = NeedIP.IP
+	bullet.Host = TestIP
 	bullet.Count = 4
 	byte1, err := json.Marshal(bullet)
 	if err != nil {
@@ -75,9 +90,10 @@ func Save_Mission (w http.ResponseWriter, r *http.Request) {
 	}
 	task.Bullet = byte1
 	err = json.Unmarshal(task.Bullet, &bullet)
-	_, _ = fmt.Fprintf(w, "type : %+v\n", task)
-	_, _ = fmt.Fprintf(w, "bullet : %+v\n", bullet)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		panic(err)
+	}
 }
 
