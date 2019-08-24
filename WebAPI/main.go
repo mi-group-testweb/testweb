@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -23,6 +24,12 @@ type ReturnType struct {
 
 type TestURL struct {
 	IP string `json:"ip"`
+}
+
+func FloatRound(f float64, n int) float64 {
+	format := "%." + strconv.Itoa(n) + "f"
+	res, _ := strconv.ParseFloat(fmt.Sprintf(format, f), 64)
+	return res
 }
 
 func main() {
@@ -47,12 +54,12 @@ func Hand(w http.ResponseWriter, r *http.Request) {
 	returntype := ReturnType{
 		Time:        curtime,
 		IP:          need_ip.IP,
-		DnsTime:     r2.Float64(),
-		TcpTime:     r2.Float64(),
-		SslTime:     r2.Float64(),
-		FirstTime:   r2.Float64(),
-		LoadTime:    r2.Float64(),
-		RequestTime: r2.Float64(),
+		DnsTime:     FloatRound(r2.Float64(), 3),
+		TcpTime:     FloatRound(r2.Float64(), 3),
+		SslTime:     FloatRound(r2.Float64(), 3),
+		FirstTime:   FloatRound(r2.Float64(), 3),
+		LoadTime:    FloatRound(r2.Float64(), 3),
+		RequestTime: FloatRound(r2.Float64(), 3),
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
