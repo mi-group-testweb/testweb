@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 type Assignment struct {
@@ -141,16 +143,36 @@ type TestURL struct {
 	IP string `json:"ip"`
 }
 
+type ReturnType struct {
+	Time          string  `json:"time"`
+	IP            string  `json:"ip"`
+	DnsTime       float64 `json:"time_dns"`
+	TcpTime       float64 `json:"time_tcp"`
+	SslTime       float64 `json:"time_ssl"`
+	FirstByteTime float64 `json:"time_firstly"`
+	LoadTime      float64 `json:"time_load"`
+	TotalTime     float64 `json:"time_total"`
+	DNSNote       string  `json:"note_dns"`
+	TCPNote       string  `json:"note_tcp"`
+	SSLNote       string  `json:"note_ssl"`
+	FirstByteNote string  `json:"note_firstly"`
+	LoadNote      string  `json:"note_load"`
+	TotalNote     string  `json:"note_total"`
+}
+
 var urlstream chan string
-var flag int
+var returnstream chan ReturnType
+
+//var flag int
 
 func main() {
 	urlstream = make(chan string, 5)
+	returnstream = make(chan ReturnType, 5)
 	http.HandleFunc("/url", GetUrl)
 	http.HandleFunc("/v2/assignments", SendMission)
 	http.HandleFunc("/v2/tracks", GetResult)
 	fmt.Println("Listening...")
-	log.Fatal(http.ListenAndServe("127.0.0.1:8234", nil))
+	log.Fatal(http.ListenAndServe("0.0.0.0:8234", nil))
 }
 
 func GetUrl(w http.ResponseWriter, r *http.Request) {
@@ -166,13 +188,19 @@ func GetUrl(w http.ResponseWriter, r *http.Request) {
 	}
 	TestIP := NeedIP.IP
 	urlstream <- TestIP
+	returnvalue, _ := <-returnstream
+	returnvalue.IP = TestIP
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-
+	if err := json.NewEncoder(w).Encode(returnvalue); err != nil {
+		panic(err)
+	}
 }
 
 func SendMission(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("get mission request")
+	rand.Seed(time.Now().UnixNano())
+	count := rand.Intn(10000)
 	_, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -182,18 +210,18 @@ func SendMission(w http.ResponseWriter, r *http.Request) {
 	}
 	task := Task{
 		TaskId: TaskId{
-			Id:               flag,
-			MissionId:        flag,
+			Id:               count,
+			MissionId:        count,
 			MissionIntanceId: "",
-			MissileId:        flag,
+			MissileId:        count,
 		},
 		Type:      "HTTP",
 		IpVersion: 4,
 	}
-	flag++
 	var bullet HTTPBullet
 	TestIP, _ := <-urlstream
 	bullet.Url = TestIP
+	//bullet.Url = "https://www.xiaomi.com"
 	bullet.Method = "POST"
 	bullet.Redirect = false
 	bullet.Timeout = 60
@@ -228,6 +256,21 @@ func GetResult(w http.ResponseWriter, r *http.Request) {
 	var HTTPResult HTTPTrack
 	err = json.Unmarshal(stack.Data[0].Track, &HTTPResult)
 	fmt.Printf(" DNSTime : %+v\n", HTTPResult.DNSResolveTime)
+	var tmp ReturnType
+	tmp.Time = time.Now().Format("2006-01-02 15:04:05")
+	tmp.DnsTime = HTTPResult.DNSResolveTime
+	tmp.TcpTime = HTTPResult.ConnectionTime
+	tmp.SslTime = HTTPResult.AppConnectTime
+	tmp.FirstByteTime = HTTPResult.FirstByteTime
+	tmp.LoadTime = HTTPResult.ResponseTime - HTTPResult.PretransferTime
+	tmp.TotalTime = HTTPResult.ResponseTime
+	tmp.DNSNote = "通过域名解析服务（DNS），将指定的域名解析成IP地址的消耗时间"
+	tmp.TCPNote = "建立到服务器的TCP连接所用的时间"
+	tmp.SSLNote = "SSL握手时间"
+	tmp.FirstByteNote = "在发出请求之后，Web 服务器返回数据的第一个字节所用的时间"
+	tmp.LoadNote = "客户机从服务器下载数据所用的时间"
+	tmp.TotalNote = "在发出请求之后，Web 服务器处理请求并开始发回数据所用的时间是"
+	returnstream <- tmp
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
