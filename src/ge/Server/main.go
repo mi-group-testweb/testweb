@@ -8,7 +8,10 @@ import (
 	"net/http"
 )
 
-var TestIP string
+type Assignment struct {
+	RequestInterval float64 `json:"request_interval"`
+	Tasks           []Task  `json:"tasks"`
+}
 
 type TaskId struct {
 	Id               int    `json:"id"`
@@ -75,7 +78,7 @@ type Err struct {
 }
 
 type DataArr struct {
-	Data   []StackData    `json:"data"`
+	Data []StackData `json:"data"`
 }
 
 type HTTPTrack struct {
@@ -138,12 +141,16 @@ type TestURL struct {
 	IP string `json:"ip"`
 }
 
+var urlstream chan string
+var flag int
+
 func main() {
+	urlstream = make(chan string, 5)
 	http.HandleFunc("/url", GetUrl)
 	http.HandleFunc("/v2/assignments", SendMission)
 	http.HandleFunc("/v2/tracks", GetResult)
 	fmt.Println("Listening...")
-	log.Fatal(http.ListenAndServe("127.0.0.1:8000", nil))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8234", nil))
 }
 
 func GetUrl(w http.ResponseWriter, r *http.Request) {
@@ -157,59 +164,70 @@ func GetUrl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	TestIP = NeedIP.IP
+	TestIP := NeedIP.IP
+	urlstream <- TestIP
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(NeedIP); err != nil {
-		panic(err)
-	}
+
 }
 
 func SendMission(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("get mission request")
 	_, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
+	assignment := Assignment{
+		RequestInterval: 600,
+	}
 	task := Task{
 		TaskId: TaskId{
-			Id:               0,
-			MissionId:        0,
+			Id:               flag,
+			MissionId:        flag,
 			MissionIntanceId: "",
-			MissileId:        0,
+			MissileId:        flag,
 		},
-		Type: "HTTP",
+		Type:      "HTTP",
+		IpVersion: 4,
 	}
+	flag++
 	var bullet HTTPBullet
+	TestIP, _ := <-urlstream
 	bullet.Url = TestIP
 	bullet.Method = "POST"
 	bullet.Redirect = false
 	bullet.Timeout = 60
+	bullet.ContentType = "raw"
+	bullet.ReturnHeader = false
 	byte1, err := json.Marshal(bullet)
 	if err != nil {
 		panic(err)
 	}
 	task.Bullet = byte1
-	err = json.Unmarshal(task.Bullet, &bullet)
+	assignment.Tasks = append(assignment.Tasks, task)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(task); err != nil {
+	if err := json.NewEncoder(w).Encode(assignment); err != nil {
 		panic(err)
 	}
+	//time.Sleep(30 * time.Second)
 }
 
 func GetResult(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Get Data")
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
 	var stack DataArr
+	fmt.Println(string(body))
 	err = json.Unmarshal(body, &stack)
 	if err != nil {
 		panic(err)
 	}
 	var HTTPResult HTTPTrack
 	err = json.Unmarshal(stack.Data[0].Track, &HTTPResult)
-	_, _ = fmt.Fprintf(w, " DNSTime : %+v\n", HTTPResult.DNSResolveTime)
+	fmt.Printf(" DNSTime : %+v\n", HTTPResult.DNSResolveTime)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
